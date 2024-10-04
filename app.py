@@ -75,64 +75,6 @@ def reajustar_porcentajes(changed_index, fondos_info):
             if i != changed_index:
                 fondos_info[i]['porcentaje'] = ajuste_proporcional
 
-def reajustar_porcentajes(changed_index, fondos_info):
-    porcentaje_actual = fondos_info[changed_index]['porcentaje']
-    porcentaje_restante = 1.0 - porcentaje_actual
-    num_otros_fondos = len(fondos_info) - 1
-
-    if num_otros_fondos > 0:
-        for i, fondo in enumerate(fondos_info):
-            if i != changed_index:
-                fondos_info[i]['porcentaje'] = porcentaje_restante / num_otros_fondos
-
-def reajustar_porcentajes(changed_index, fondos_info):
-    total_porcentaje_restante = 1.0 - fondos_info[changed_index]['porcentaje']
-    num_otros_fondos = len(fondos_info) - 1
-
-    if num_otros_fondos > 0:
-        for i, fondo in enumerate(fondos_info):
-            if i != changed_index:
-                fondos_info[i]['porcentaje'] = total_porcentaje_restante / num_otros_fondos
-
-def reajustar_porcentajes(changed_index, fondos_info):
-    total_porcentaje = sum(fondo['porcentaje'] for i, fondo in enumerate(fondos_info) if i != changed_index)
-    porcentaje_restante = 1.0 - fondos_info[changed_index]['porcentaje']
-    
-    if total_porcentaje > 0:
-        for i, fondo in enumerate(fondos_info):
-            if i != changed_index:
-                fondos_info[i]['porcentaje'] = (fondo['porcentaje'] / total_porcentaje) * porcentaje_restante
-    else:
-        for i, fondo in enumerate(fondos_info):
-            if i != changed_index:
-                fondos_info[i]['porcentaje'] = porcentaje_restante / (len(fondos_info) - 1)
-
-def reajustar_porcentajes(changed_index, fondos_info):
-    total_porcentaje = sum(fondo['porcentaje'] for i, fondo in enumerate(fondos_info) if i != changed_index)
-    porcentaje_restante = 1.0 - fondos_info[changed_index]['porcentaje']
-    
-    if total_porcentaje > 0:
-        for i, fondo in enumerate(fondos_info):
-            if i != changed_index:
-                fondos_info[i]['porcentaje'] = (fondo['porcentaje'] / total_porcentaje) * porcentaje_restante
-    else:
-        for i, fondo in enumerate(fondos_info):
-            if i != changed_index:
-                fondos_info[i]['porcentaje'] = porcentaje_restante / (len(fondos_info) - 1)
-
-def reajustar_porcentajes(changed_index, fondos_info):
-    total_porcentaje = sum(fondo['porcentaje'] for i, fondo in enumerate(fondos_info) if i != changed_index)
-    porcentaje_restante = 1.0 - fondos_info[changed_index]['porcentaje']
-    
-    if total_porcentaje > 0:
-        for i, fondo in enumerate(fondos_info):
-            if i != changed_index:
-                fondos_info[i]['porcentaje'] = (fondo['porcentaje'] / total_porcentaje) * porcentaje_restante
-    else:
-        for i, fondo in enumerate(fondos_info):
-            if i != changed_index:
-                fondos_info[i]['porcentaje'] = porcentaje_restante / (len(fondos_info) - 1)
-
 # Aplicación Streamlit
 st.set_page_config(page_title='WiseWealthWeb', page_icon='💰')
 st.title('WiseWealthWeb: Visualizador de Proyección Financiera')
@@ -154,12 +96,7 @@ max_saldo_con_interes = st.sidebar.number_input('Máximo saldo con interés apli
 descontar_impuestos_de_ahorro = st.sidebar.checkbox('Descontar impuestos de la cuenta de ahorro', value=True)
 
 fondos_info = [{'porcentaje': 1.0 / fondos} for i in range(fondos)] if fondos > 0 else []
-fondos_info = [{'porcentaje': 0.7 if i == 0 else 0.3} for i in range(fondos)] if fondos > 0 else []
-fondos_info = [{'porcentaje': 1.0 / fondos} for i in range(fondos)] if fondos > 0 else []
-fondos_info = [{'porcentaje': 1.0 / fondos} for i in range(fondos)] if fondos > 0 else []
 fondos_info = [crear_entrada_fondo(i, fondos_info) for i in range(fondos)] if fondos > 0 else []
-
-
 
 años_proyeccion = st.sidebar.number_input('Años de proyección:', min_value=1, value=30, step=1)
 
@@ -225,7 +162,7 @@ if st.button('Calcular Proyección'):
     # Descripción de cada valor de la tabla
     st.write("### Descripción de los valores de la tabla")
     st.write("- **Año**: Representa el año de la proyección en curso.")
-    st.write("- **Valor Total del Ahorro con Interés (euros)**: Muestra el saldo total acumulado en la cuenta de ahorro, incluyendo los intereses generados hasta ese año.")
+    st.write("- **Valor Total del Ahorro con Interés (euros)**: Muestra el saldo total acumulado en la cuenta de ahorro, incluyendo los intereses generados hasta ese año. Si la opción está activada, se restan los impuestos correspondientes.")
     st.write("- **Impuestos Ahorro (euros)**: Indica la cantidad de impuestos pagados sobre los intereses generados en la cuenta de ahorro durante el año.")
     st.write("- **Dinero Total Invertido (euros)**: Es la suma total del dinero destinado tanto al ahorro como a la inversión, acumulado hasta el año en cuestión.")
     if fondos > 0:
