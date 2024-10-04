@@ -29,6 +29,7 @@ def calcular_valor_futuro_ahorro_con_interes_y_impuestos(aportacion_mensual, tas
     return saldo, impuestos_totales, saldo_anterior, impuestos_anuales
 
 
+
 def calcular_valor_futuro_con_aportaciones_diversificadas(aportacion_mensual, porcentaje, rendimiento_mensual, meses, saldo_inicial):
     saldo = saldo_inicial
     for _ in range(meses):
@@ -37,8 +38,10 @@ def calcular_valor_futuro_con_aportaciones_diversificadas(aportacion_mensual, po
     return saldo
 
 
+
 def calcular_beneficio_fondos(valor_total_fondos, dinero_invertido_sin_intereses):
     return valor_total_fondos - dinero_invertido_sin_intereses
+
 
 
 def calcular_impuestos(beneficio_neto, tramos=None):
@@ -65,6 +68,8 @@ def calcular_impuestos(beneficio_neto, tramos=None):
 
     return round(impuesto, 2)
 
+
+
 def crear_entrada_fondo(index, fondos_info):
     st.subheader(f'Fondo {index + 1}')
     nombre_fondo = st.text_input(f'Nombre del Fondo {index + 1}:', value=f'Fondo {index + 1}', key=f'nombre_fondo_{index}')
@@ -77,6 +82,8 @@ def crear_entrada_fondo(index, fondos_info):
     reajustar_porcentajes(index, fondos_info)
 
     return {'nombre': nombre_fondo, 'rendimiento_anual': rendimiento_anual, 'porcentaje': fondos_info[index]['porcentaje'], 'saldo_inicial': saldo_inicial_fondo}
+
+
 
 def reajustar_porcentajes(changed_index, fondos_info):
     porcentaje_total = sum(f['porcentaje'] for f in fondos_info)
@@ -116,6 +123,9 @@ def reajustar_porcentajes(changed_index, fondos_info):
                 if i != changed_index:
                     fondos_info[i]['porcentaje'] += diferencia_final
                     break
+
+
+
 
 # Aplicación Streamlit
 st.set_page_config(page_title='WiseWealthWeb', page_icon='💰')
