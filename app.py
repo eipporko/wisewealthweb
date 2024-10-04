@@ -1,4 +1,4 @@
-# app.py
+# WiseWealthWeb - app.py
 import streamlit as st
 import pandas as pd
 
@@ -134,7 +134,8 @@ def reajustar_porcentajes(changed_index, fondos_info):
                 fondos_info[i]['porcentaje'] = porcentaje_restante / (len(fondos_info) - 1)
 
 # Aplicación Streamlit
-st.title('Visualizador de Proyección Financiera')
+st.set_page_config(page_title='WiseWealthWeb', page_icon='💰')
+st.title('WiseWealthWeb: Visualizador de Proyección Financiera')
 
 # Entradas del usuario
 st.sidebar.header('Configuración de la Proyección')
@@ -240,4 +241,4 @@ if st.button('Calcular Proyección'):
         df_proyeccion_completa['Total Ahorro + Fondos (euros)'] = df_proyeccion_completa['Valor Total del Ahorro con Interés (euros)'] + df_proyeccion_completa['Valor Total Invertido en Fondos (euros)']
         st.line_chart(df_proyeccion_completa.set_index('Año')[['Dinero Total Invertido (euros)', 'Valor Total del Ahorro con Interés (euros)', 'Valor Total Invertido en Fondos (euros)', 'Total Ahorro + Fondos (euros)']])
     else:
-        st.line_chart(df_proyeccion_completa.set_index('Año')[['Valor Total del Ahorro con Interés (euros)']])
+        st.line_chart(df_proyeccion_completa.set_index('Año')[['Dinero Total Invertido (euros)', 'Valor Total del Ahorro con Interés (euros)']])
