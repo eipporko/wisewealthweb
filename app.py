@@ -70,8 +70,9 @@ def calcular_impuestos(beneficio_neto, tramos=None):
 
 
 def crear_entrada_fondo(index, fondos_info):
+    default_names = ['MSCI World', 'Nasdaq-100']
     st.subheader(f'Fondo {index + 1}')
-    nombre_fondo = st.text_input(f'Nombre del Fondo {index + 1}:', value=f'Fondo {index + 1}', key=f'nombre_fondo_{index}')
+    nombre_fondo = st.text_input(f'Nombre del Fondo {index + 1}:', value=default_names[index] if index < len(default_names) else f'Fondo {index + 1}', key=f'nombre_fondo_{index}')
     rendimiento_anual = st.number_input(f'Rendimiento anual del Fondo {index + 1} (%):', min_value=0.0, value=6.0 if index == 0 else 10.0, step=0.1, key=f'rendimiento_anual_{index}') / 100
     porcentaje_fondo = st.slider(f'Porcentaje destinado al Fondo {index + 1}:', min_value=0.0, max_value=1.0, value=fondos_info[index]['porcentaje'] if fondos_info else (0.7 if index == 0 else 0.3), step=0.05, key=f'porcentaje_fondo_{index}')
     saldo_inicial_fondo = st.number_input(f'Saldo inicial del Fondo {index + 1} (€):', min_value=0.0, value=0.0, step=100.0, key=f'saldo_inicial_{index}')
@@ -213,11 +214,13 @@ for year in range(1, años_proyeccion + 1):
     # Calcular los valores de la inversión en fondos
     if porcentaje_inversion > 0 and fondos > 0:
         valor_total_fondos = 0
+        detalle_fondos = []
         for fondo in fondos_info:
             valor_fondo = calcular_valor_futuro_con_aportaciones_diversificadas(
                 aportacion_inversion, fondo['porcentaje'], fondo['rendimiento_anual'] / 12, 12, fondo['saldo_inicial']
             )
             valor_total_fondos += valor_fondo
+            detalle_fondos.append(f"{fondo['nombre']}: {round(valor_fondo, 2)} €")
             # Actualizar el saldo inicial para el próximo año
             fondo['saldo_inicial'] = valor_fondo
 
@@ -226,6 +229,7 @@ for year in range(1, años_proyeccion + 1):
         impuestos_liquidacion_fondos = calcular_impuestos(beneficio_fondos, tramos)
     else:
         valor_total_fondos = 0
+        detalle_fondos = []
         beneficio_fondos = 0
         impuestos_liquidacion_fondos = 0
 
@@ -247,14 +251,14 @@ for year in range(1, años_proyeccion + 1):
         entry.update({
             "Valor Total Invertido en Fondos (euros)": round(valor_total_fondos, 2),
             "Beneficio de Fondos (euros)": round(beneficio_fondos, 2),
-            "Impuestos de Liquidación Fondos (euros)": round(impuestos_liquidacion_fondos, 2)
+            "Impuestos de Liquidación Fondos (euros)": round(impuestos_liquidacion_fondos, 2),
+            "Detalle de Fondos": "; ".join(detalle_fondos)
         })
     if porcentaje_ahorro > 0 or (porcentaje_inversion > 0 and fondos > 0):
         entry.update({
             "Valor Total Ahorro + Inversión (euros)": round(valor_total_ahorro_e_inversion, 2)
         })
     proyeccion_completa.append(entry)
-
 
 
 
@@ -279,8 +283,11 @@ if st.button('Calcular Proyección'):
         st.write("- **Valor Total Invertido en Fondos (euros)**: Muestra el valor total de los fondos invertidos, considerando el rendimiento de los fondos hasta ese año.")
         st.write("- **Beneficio de Fondos (euros)**: Representa el beneficio neto obtenido de las inversiones en fondos, después de descontar la cantidad invertida.")
         st.write("- **Impuestos de Liquidación Fondos (euros)**: Indica la cantidad de impuestos a pagar en caso de que se liquiden los fondos en ese año.")
+        st.write("- **Detalle de Fondos**: Desglose del rendimiento individual de cada fondo de inversión.")
     if porcentaje_ahorro > 0 or (porcentaje_inversion > 0 and fondos > 0):
         st.write("- **Valor Total Ahorro + Inversión (euros)**: Representa la suma del valor total del ahorro con el valor total de los fondos invertidos hasta ese año.")
+
+    st.write('---')
 
     # Texto antes de los gráficos
     st.write("### Gráficas de la Proyección Financiera")
@@ -294,3 +301,34 @@ if st.button('Calcular Proyección'):
     if porcentaje_ahorro > 0 or (porcentaje_inversion > 0 and fondos > 0):
         columnas_grafica.append("Valor Total Ahorro + Inversión (euros)")
     st.line_chart(df_proyeccion_completa.set_index('Año')[columnas_grafica])
+
+    st.write('---')
+
+    # Resumen de la proyección
+    st.write("### Resumen de la Proyección")
+    total_años = años_proyeccion
+    total_invertido = df_proyeccion_completa["Dinero Total Invertido (euros)"].iloc[-1]
+    total_ahorro = df_proyeccion_completa["Valor Total del Ahorro con Interés (euros)"].iloc[-1] if porcentaje_ahorro > 0 else 0
+    total_fondos = df_proyeccion_completa["Valor Total Invertido en Fondos (euros)"].iloc[-1] if porcentaje_inversion > 0 and fondos > 0 else 0
+    impuestos_liquidacion_fondos = df_proyeccion_completa["Impuestos de Liquidación Fondos (euros)"].iloc[-1] if porcentaje_inversion > 0 and fondos > 0 else 0
+    valor_total_ahorro_e_inversion = df_proyeccion_completa["Valor Total Ahorro + Inversión (euros)"].iloc[-1] if porcentaje_ahorro > 0 or (porcentaje_inversion > 0 and fondos > 0) else 0
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if porcentaje_ahorro > 0:
+            st.metric(label="Total Acumulado en Ahorro (euros)", value=round(total_ahorro, 2))
+        if porcentaje_inversion > 0 and fondos > 0:
+            st.metric(label="Total Acumulado en Fondos (euros)", value=round(total_fondos, 2))
+    with col2:
+        if porcentaje_ahorro > 0 or (porcentaje_inversion > 0 and fondos > 0):
+            st.metric(label="Valor Total Ahorro + Inversión (euros)", value=round(valor_total_ahorro_e_inversion, 2))
+            if porcentaje_inversion > 0 and fondos > 0:
+                st.metric(label="Impuestos a Pagar por Liquidación de Fondos (euros)", value=round(impuestos_liquidacion_fondos, 2))
+    with col3:
+        st.metric(label="Años de Proyección", value=total_años)
+        st.metric(label="Total Invertido (euros)", value=round(total_invertido, 2))
+
+    if porcentaje_inversion > 0 and fondos > 0:
+        st.write("### Desglose del Rendimiento Individual de Fondos de Inversión")
+        for fondo in fondos_info:
+            st.write(f"- **{fondo['nombre']}**: {round(fondo['saldo_inicial'], 2)} €")
