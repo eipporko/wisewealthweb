@@ -6,7 +6,6 @@ import math as Math
 
 # Definir funciones de cálculo
 def calcular_valor_futuro_ahorro_con_interes_y_impuestos(aportacion_mensual, tasa_mensual, meses, saldo_anterior, max_saldo_con_interes, descontar_impuestos_de_ahorro):
-    print("saldo anterior: ", saldo_anterior)
     saldo = saldo_anterior
     impuestos_totales = 0
     intereses_acumulados_anual = 0
@@ -20,9 +19,7 @@ def calcular_valor_futuro_ahorro_con_interes_y_impuestos(aportacion_mensual, tas
 
     # Calcular impuestos solo sobre los intereses acumulados del año
     if intereses_acumulados_anual > 0:
-        print("beneficio anual: ", intereses_acumulados_anual)
         impuestos_anuales = calcular_impuestos(intereses_acumulados_anual)
-        print(impuestos_anuales)
         if descontar_impuestos_de_ahorro:
             saldo -= impuestos_anuales  # Restar los impuestos al saldo si se elige descontar de la cuenta de ahorro
         impuestos_totales += impuestos_anuales  # Sumar al total de impuestos
