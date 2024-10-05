@@ -6,6 +6,7 @@ import math as Math
 
 # Definir funciones de cálculo
 def calcular_valor_futuro_ahorro_con_interes_y_impuestos(aportacion_mensual, tasa_mensual, meses, saldo_anterior, max_saldo_con_interes, descontar_impuestos_de_ahorro):
+    print("saldo anterior: ", saldo_anterior)
     saldo = saldo_anterior
     impuestos_totales = 0
     intereses_acumulados_anual = 0
@@ -17,17 +18,18 @@ def calcular_valor_futuro_ahorro_con_interes_y_impuestos(aportacion_mensual, tas
         intereses_acumulados_anual += interes  # Sumar el interés del mes al total anual
         saldo += aportacion_mensual  # Añadir la aportación mensual
 
-    # Al final del periodo, calcular impuestos sobre el interés acumulado
+    # Calcular impuestos solo sobre los intereses acumulados del año
     if intereses_acumulados_anual > 0:
+        print("beneficio anual: ", intereses_acumulados_anual)
         impuestos_anuales = calcular_impuestos(intereses_acumulados_anual)
+        print(impuestos_anuales)
         if descontar_impuestos_de_ahorro:
             saldo -= impuestos_anuales  # Restar los impuestos al saldo si se elige descontar de la cuenta de ahorro
         impuestos_totales += impuestos_anuales  # Sumar al total de impuestos
     else:
         impuestos_anuales = 0
     
-    return saldo, impuestos_totales, saldo_anterior, impuestos_anuales
-
+    return saldo, impuestos_totales, saldo, impuestos_anuales
 
 
 def calcular_valor_futuro_con_aportaciones_diversificadas(aportacion_mensual, porcentaje, rendimiento_mensual, meses, saldo_inicial):
@@ -38,10 +40,8 @@ def calcular_valor_futuro_con_aportaciones_diversificadas(aportacion_mensual, po
     return saldo
 
 
-
 def calcular_beneficio_fondos(valor_total_fondos, dinero_invertido_sin_intereses):
     return valor_total_fondos - dinero_invertido_sin_intereses
-
 
 
 def calcular_impuestos(beneficio_neto, tramos=None):
@@ -69,7 +69,6 @@ def calcular_impuestos(beneficio_neto, tramos=None):
     return round(impuesto, 2)
 
 
-
 def crear_entrada_fondo(index, fondos_info):
     st.subheader(f'Fondo {index + 1}')
     nombre_fondo = st.text_input(f'Nombre del Fondo {index + 1}:', value=f'Fondo {index + 1}', key=f'nombre_fondo_{index}')
@@ -82,7 +81,6 @@ def crear_entrada_fondo(index, fondos_info):
     reajustar_porcentajes(index, fondos_info)
 
     return {'nombre': nombre_fondo, 'rendimiento_anual': rendimiento_anual, 'porcentaje': fondos_info[index]['porcentaje'], 'saldo_inicial': saldo_inicial_fondo}
-
 
 
 def reajustar_porcentajes(changed_index, fondos_info):
@@ -123,8 +121,6 @@ def reajustar_porcentajes(changed_index, fondos_info):
                 if i != changed_index:
                     fondos_info[i]['porcentaje'] += diferencia_final
                     break
-
-
 
 
 # Aplicación Streamlit
@@ -196,35 +192,36 @@ for i in range(num_tramos):
     separador = st.sidebar.markdown('---')
     tramos.append((limite, tipo))
 
-
 # Cálculos
 aportacion_inversion = transferencia_mensual * porcentaje_inversion
 aportacion_ahorro = transferencia_mensual * porcentaje_ahorro
 if porcentaje_ahorro > 0:
     tasa_ahorro_mensual = tasa_ahorro_anual / 12
 
-meses_list = [year * 12 for year in range(1, años_proyeccion + 1)]
-
 proyeccion_completa = []
 saldo_anterior = saldo_inicial_ahorro  # Saldo inicial en ahorro
 aportacion_total_anual = aportacion_ahorro * 12  # Aportación anual al ahorro
 
-for year, meses in enumerate(meses_list, start=1):
+for year in range(1, años_proyeccion + 1):
     # Calcular los valores de ahorro
     if porcentaje_ahorro > 0:
         saldo_actual_ahorro, impuestos_ahorro, saldo_anterior, impuestos_anuales_ahorro = calcular_valor_futuro_ahorro_con_interes_y_impuestos(
-            aportacion_ahorro, tasa_ahorro_mensual, meses, saldo_anterior, max_saldo_con_interes, descontar_impuestos_de_ahorro)
+            aportacion_ahorro, tasa_ahorro_mensual, 12, saldo_anterior, max_saldo_con_interes, descontar_impuestos_de_ahorro)
     else:
         saldo_actual_ahorro, impuestos_anuales_ahorro = 0, 0
     
     # Calcular los valores de la inversión en fondos
     if porcentaje_inversion > 0 and fondos > 0:
-        valor_total_fondos = sum(
-            calcular_valor_futuro_con_aportaciones_diversificadas(
-                aportacion_inversion, fondo['porcentaje'], fondo['rendimiento_anual'] / 12, meses, fondo['saldo_inicial'])
-            for fondo in fondos_info
-        )
-        dinero_invertido_fondos = aportacion_inversion * meses
+        valor_total_fondos = 0
+        for fondo in fondos_info:
+            valor_fondo = calcular_valor_futuro_con_aportaciones_diversificadas(
+                aportacion_inversion, fondo['porcentaje'], fondo['rendimiento_anual'] / 12, 12, fondo['saldo_inicial']
+            )
+            valor_total_fondos += valor_fondo
+            # Actualizar el saldo inicial para el próximo año
+            fondo['saldo_inicial'] = valor_fondo
+
+        dinero_invertido_fondos = aportacion_inversion * 12 * year
         beneficio_fondos = calcular_beneficio_fondos(valor_total_fondos, dinero_invertido_fondos)
         impuestos_liquidacion_fondos = calcular_impuestos(beneficio_fondos, tramos)
     else:
@@ -233,7 +230,7 @@ for year, meses in enumerate(meses_list, start=1):
         impuestos_liquidacion_fondos = 0
 
     # Sumar dinero total invertido (ahorro + fondos)
-    dinero_total_invertido = (aportacion_ahorro + aportacion_inversion) * meses
+    dinero_total_invertido = (aportacion_ahorro + aportacion_inversion) * 12 * year
     valor_total_ahorro_e_inversion = saldo_actual_ahorro + valor_total_fondos
 
     # Guardar los resultados en la tabla
@@ -257,6 +254,9 @@ for year, meses in enumerate(meses_list, start=1):
             "Valor Total Ahorro + Inversión (euros)": round(valor_total_ahorro_e_inversion, 2)
         })
     proyeccion_completa.append(entry)
+
+
+
 
 # Mostrar resultados
 @st.cache_data
