@@ -38,8 +38,8 @@ def calcular_valor_futuro_con_aportaciones_diversificadas(aportacion_mensual, po
     return saldo
 
 
-def calcular_beneficio_fondos(valor_total_fondos, dinero_invertido_sin_intereses):
-    return valor_total_fondos - dinero_invertido_sin_intereses
+def calcular_beneficio_fondos(valor_total_fondos, dinero_invertido_sin_intereses, saldo_inicial=0):
+    return valor_total_fondos - dinero_invertido_sin_intereses - saldo_inicial
 
 
 def calcular_impuestos(beneficio_neto, tramos=None):
@@ -79,7 +79,7 @@ def crear_entrada_fondo(index, fondos_info, idioma):
     fondos_info[index]['porcentaje'] = porcentaje_fondo
     reajustar_porcentajes(index, fondos_info)
 
-    return {'nombre': nombre_fondo, 'rendimiento_anual': rendimiento_anual, 'porcentaje': fondos_info[index]['porcentaje'], 'saldo_inicial': saldo_inicial_fondo}
+    return {'nombre': nombre_fondo, 'rendimiento_anual': rendimiento_anual, 'porcentaje': fondos_info[index]['porcentaje'], 'saldo_inicial': saldo_inicial_fondo, 'saldo_actual': saldo_inicial_fondo}
 
 
 def reajustar_porcentajes(changed_index, fondos_info):
@@ -202,6 +202,7 @@ if porcentaje_ahorro > 0:
 proyeccion_completa = []
 saldo_anterior = saldo_inicial_ahorro  # Saldo inicial en ahorro
 aportacion_total_anual = aportacion_ahorro * 12  # Aportación anual al ahorro
+dinero_inicial_fondos = sum(fondo['saldo_inicial'] for fondo in fondos_info)
 
 for year in range(1, años_proyeccion + 1):
     # Calcular los valores de ahorro
@@ -217,15 +218,15 @@ for year in range(1, años_proyeccion + 1):
         detalle_fondos = []
         for fondo in fondos_info:
             valor_fondo = calcular_valor_futuro_con_aportaciones_diversificadas(
-                aportacion_inversion, fondo['porcentaje'], fondo['rendimiento_anual'] / 12, 12, fondo['saldo_inicial']
+                aportacion_inversion, fondo['porcentaje'], fondo['rendimiento_anual'] / 12, 12, fondo['saldo_actual']
             )
             valor_total_fondos += valor_fondo
             detalle_fondos.append(f"{fondo['nombre']}: {round(valor_fondo, 2)} €")
             # Actualizar el saldo inicial para el próximo año
-            fondo['saldo_inicial'] = valor_fondo
+            fondo['saldo_actual'] = valor_fondo
 
         dinero_invertido_fondos = aportacion_inversion * 12 * year
-        beneficio_fondos = calcular_beneficio_fondos(valor_total_fondos, dinero_invertido_fondos)
+        beneficio_fondos = calcular_beneficio_fondos(valor_total_fondos, dinero_invertido_fondos, dinero_inicial_fondos)
         impuestos_liquidacion_fondos = calcular_impuestos(beneficio_fondos, tramos)
     else:
         valor_total_fondos = 0
@@ -234,7 +235,8 @@ for year in range(1, años_proyeccion + 1):
         impuestos_liquidacion_fondos = 0
 
     # Sumar dinero total invertido (ahorro + fondos)
-    dinero_total_invertido = (aportacion_ahorro + aportacion_inversion) * 12 * year
+
+    dinero_total_invertido = (aportacion_ahorro + aportacion_inversion) * 12 * year + dinero_inicial_fondos + saldo_inicial_ahorro
     valor_total_ahorro_e_inversion = saldo_actual_ahorro + valor_total_fondos
 
     # Guardar los resultados en la tabla
@@ -335,4 +337,4 @@ if st.button(TRANSLATIONS[idioma]['calculate_projection']):
     if porcentaje_inversion > 0 and fondos > 0:
         st.write(f"### {TRANSLATIONS[idioma]['investment_fund_performance']}")
         for fondo in fondos_info:
-            st.write(f"- **{fondo['nombre']}**: {formato_moneda(fondo['saldo_inicial'])}")
+            st.write(f"- **{fondo['nombre']}**: {formato_moneda(fondo['saldo_actual'], idioma=idioma)} €")
